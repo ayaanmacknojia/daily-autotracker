@@ -1,4 +1,6 @@
-import json
+import json # for data storage that remains after exiting app
+import datetime # for using time and dates
+from datetime import datetime, timedelta # for calculations involving dates
 
 morning_or_evening = input("Are you running this in the morning or evening? Warning: if two identical times of the day are inputted consecutively, data will be null for other time of day (m/e): ")
 message_for_morning = None
@@ -15,18 +17,16 @@ mood_evening = None
 goal_achieved = None
 message_for_morning = None
 
-stats_dict = {}
+stats_dict = {} # user stats dictionary
+date_dict = {} # dictionary that holds user stats dictionary
 
-try:
-    with open("daily_data.json", "r") as file:
-        stats_dict = json.load(file)
-        sleep_hours = stats_dict["sleep_hours"]
-        gym_today = stats_dict["gym_today"]
-        waking_mood = stats_dict["waking_mood"]
-        goal_today = stats_dict["goal_today"]
+'''
+yesterday_with_time = datetime.now() - timedelta(days=1) # get yesterday's date
+yesterday_date_string = yesterday_with_time.strftime("%Y-%m-%d") # convert to string
+'''
 
-except FileNotFoundError:
-    pass
+date = datetime.now()
+string_date = date.strftime("%Y-%m-%d")
 
 
 if morning_or_evening == "m":
@@ -45,6 +45,19 @@ if morning_or_evening == "m":
     print(f"Mood after waking: {waking_mood}")
     print(f"Today's goal: {goal_today}")
 else:
+    try:
+        with open("daily_data.json", "r") as file:
+            date_dict = json.load(file)
+            if string_date in date_dict:
+                if "sleep_hours" in date_dict[string_date] and "gym_today" in date_dict[string_date] and "waking_mood" in date_dict[string_date] and "goal_today" in date_dict[string_date]:
+                    sleep_hours = date_dict[string_date]["sleep_hours"]
+                    gym_today = date_dict[string_date]["gym_today"]
+                    waking_mood = date_dict[string_date]["waking_mood"]
+                    goal_today = date_dict[string_date]["goal_today"]
+
+    except FileNotFoundError:
+        pass
+
     print("--- EVENING SYSTEM CHECK ---")
 
     # gathering evening inputs
@@ -70,6 +83,7 @@ else:
     print(f"Today's goal achieved: {goal_achieved}")
 
 
+
 # add all stats to dictionary
 stats_dict["sleep_hours"] = sleep_hours
 stats_dict["gym_today"] = gym_today
@@ -83,10 +97,21 @@ stats_dict["goal_achieved"] = goal_achieved
 stats_dict["morning_message"] = message_for_morning
 
 
+try: 
+    with open("daily_data.json", "r") as file:
+        date_dict = json.load(file)
+except FileNotFoundError:
+    pass
+
+date_dict[string_date] = stats_dict
+
 # dump dictionary object to json text file
 with open("daily_data.json", "w") as file:
-    json.dump(stats_dict, file)
+    json.dump(date_dict, file)
 
+
+# original text file storage code
+# use JSON instead because we can cleanly store + extract data instead of having to parse data from a raw text file
 '''
 with open("day_save.txt", "a") as file:
 
