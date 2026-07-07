@@ -1,6 +1,6 @@
 import json # for data storage that remains after exiting app
-import datetime # for using time and dates
-from datetime import datetime, timedelta # for calculations involving dates
+from datetime import datetime, timedelta # for calculations involving dates # for using time and dates
+
 
 morning_or_evening = input("Are you running this in the morning or evening? Warning: if two identical times of the day are inputted consecutively, data will be null for other time of day (m/e): ")
 message_for_morning = None
@@ -28,6 +28,16 @@ yesterday_date_string = yesterday_with_time.strftime("%Y-%m-%d") # convert to st
 date = datetime.now()
 string_date = date.strftime("%Y-%m-%d")
 
+# load in previous file if possible to preserve previous data
+try: 
+    with open("daily_data.json", "r") as file:
+        date_dict = json.load(file)
+        if string_date in date_dict:
+            stats_dict = date_dict[string_date]
+except FileNotFoundError:
+    pass
+
+
 
 if morning_or_evening == "m":
     print("--- MORNING SYSTEM CHECK ---")
@@ -44,19 +54,21 @@ if morning_or_evening == "m":
     print(f"Gym session today: {gym_today}")
     print(f"Mood after waking: {waking_mood}")
     print(f"Today's goal: {goal_today}")
-else:
-    try:
-        with open("daily_data.json", "r") as file:
-            date_dict = json.load(file)
-            if string_date in date_dict:
-                if "sleep_hours" in date_dict[string_date] and "gym_today" in date_dict[string_date] and "waking_mood" in date_dict[string_date] and "goal_today" in date_dict[string_date]:
-                    sleep_hours = date_dict[string_date]["sleep_hours"]
-                    gym_today = date_dict[string_date]["gym_today"]
-                    waking_mood = date_dict[string_date]["waking_mood"]
-                    goal_today = date_dict[string_date]["goal_today"]
 
-    except FileNotFoundError:
-        pass
+    # add all morning stats to dictionary
+    stats_dict["sleep_hours"] = sleep_hours
+    stats_dict["gym_today"] = gym_today
+    stats_dict["waking_mood"] = waking_mood
+    stats_dict["goal_today"] = goal_today
+
+else:
+
+    if string_date in date_dict:
+        if "sleep_hours" in date_dict[string_date] and "gym_today" in date_dict[string_date] and "waking_mood" in date_dict[string_date] and "goal_today" in date_dict[string_date]:
+            sleep_hours = date_dict[string_date]["sleep_hours"]
+            gym_today = date_dict[string_date]["gym_today"]
+            waking_mood = date_dict[string_date]["waking_mood"]
+            goal_today = date_dict[string_date]["goal_today"]
 
     print("--- EVENING SYSTEM CHECK ---")
 
@@ -82,26 +94,11 @@ else:
     print(f"Mood tonight: {mood_evening}")
     print(f"Today's goal achieved: {goal_achieved}")
 
-
-
-# add all stats to dictionary
-stats_dict["sleep_hours"] = sleep_hours
-stats_dict["gym_today"] = gym_today
-stats_dict["waking_mood"] = waking_mood
-stats_dict["goal_today"] = goal_today
-
-stats_dict["win_today"] = win_today
-stats_dict["hours_worked"] = hours_worked
-stats_dict["mood_evening"] = mood_evening
-stats_dict["goal_achieved"] = goal_achieved
-stats_dict["morning_message"] = message_for_morning
-
-
-try: 
-    with open("daily_data.json", "r") as file:
-        date_dict = json.load(file)
-except FileNotFoundError:
-    pass
+    stats_dict["win_today"] = win_today
+    stats_dict["hours_worked"] = hours_worked
+    stats_dict["mood_evening"] = mood_evening
+    stats_dict["goal_achieved"] = goal_achieved
+    stats_dict["morning_message"] = message_for_morning
 
 date_dict[string_date] = stats_dict
 
