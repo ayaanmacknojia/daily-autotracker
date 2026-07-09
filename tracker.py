@@ -60,7 +60,29 @@ def summarize(data_file):
     print(f"Gym days this week: {gym_days}")
     print(f"Goal hit rate: {goal_hit_rate} % of goals are hit!")
     print(f"Average hours worked per day: {avg_hours_worked}")
-        
+
+# streak check function     
+def streak_check(data_file):
+    date_dict = data_file
+
+    date_today = datetime.today().date()
+    last_date_string = list(date_dict)[-1] # get previous entry date, not yesterday's date (no guarantee of one day gap)
+    last_entry_date = datetime.strptime(last_date_string, "%Y-%m-%d").date()
+    last_entry_stats = list(date_dict.values())[-1]  # get previous entry's stats_dict
+
+    streak_yesterday = last_entry_stats.get("streak", 0) # uses .get() in case no streak exists for yesterday (first run ever)
+
+    day_difference = (date_today - last_entry_date).days
+
+    if day_difference == 1: # one day apart -> increment previous streak
+        stats_dict["streak"] = streak_yesterday + 1
+    elif day_difference > 1: # multiple days apart -> reset streak to 1 (includes today)
+        stats_dict["streak"] = 1
+    else: # 0 or negative days apart, do nothing (this prevents a morning run to evening run from incrementing twice per day)
+        pass
+
+
+
 
 morning_or_evening = input("Are you running this in the morning or evening? Warning: if two identical times of the day are inputted consecutively, data won't exist for other time of day (m/e): ")
 message_for_morning = None
@@ -76,6 +98,8 @@ hours_worked = None
 mood_evening = None
 goal_achieved = None
 message_for_morning = None
+
+
 
 stats_dict = {} # user stats dictionary
 date_dict = {} # dictionary that holds user stats dictionary
@@ -130,11 +154,12 @@ if morning_or_evening == "m": # morning input
 else: # evening input
 
     if string_date in date_dict:
-        if "sleep_hours" in date_dict[string_date] and "gym_today" in date_dict[string_date] and "waking_mood" in date_dict[string_date] and "goal_today" in date_dict[string_date]:
+        if "sleep_hours" in date_dict[string_date] and "gym_today" in date_dict[string_date] and "waking_mood" in date_dict[string_date] and "goal_today" in date_dict[string_date] and "streak" in date_dict[string_date]:
             sleep_hours = date_dict[string_date]["sleep_hours"]
             gym_today = date_dict[string_date]["gym_today"]
             waking_mood = date_dict[string_date]["waking_mood"]
             goal_today = date_dict[string_date]["goal_today"]
+            stats_dict["streak"] = date_dict[string_date]["streak"]
 
     print("--- EVENING SYSTEM CHECK ---")
 
@@ -166,6 +191,12 @@ else: # evening input
     stats_dict["goal_achieved"] = goal_achieved
     stats_dict["morning_message"] = message_for_morning
 
+# check whether to increment or reset streak for today
+if string_date not in date_dict:
+    streak_check(date_dict)
+else:
+    pass
+
 date_dict[string_date] = stats_dict
 
 # dump dictionary object to json text file
@@ -184,6 +215,8 @@ if weekly_summary == "y":
         summarize(subset_date_dict)
 else:
     pass
+
+
 
 # original text file storage code
 # use JSON instead because we can cleanly store + extract data instead of having to parse data from a raw text file
