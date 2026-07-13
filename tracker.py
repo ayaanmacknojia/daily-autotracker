@@ -2,8 +2,8 @@ import json # for data storage that remains after exiting app
 from datetime import datetime, timedelta # for calculations involving dates # for using time and dates
 
 # weekly summary function: finds avg sleep, total gym days, goal hit rate, etc
-def summarize(data_file):
-    date_dict = data_file
+def summarize(data):
+    date_dict = data
 
     total_sleep = 0
     gym_days = 0
@@ -33,11 +33,11 @@ def summarize(data_file):
                 gym_days += 1
             elif key == "waking_mood":
                 print(f"Waking mood: {value}")
-            elif "goal_today" in data and key == "goal_achieved" and value == "y":
+            elif key == "goal_achieved" and value == "y":
                 print(f"Goal {data['goal_today']} was achieved!")
                 goal_hit += 1
                 goal_counter += 1
-            elif "goal_today" in data and key == "goal_achieved" and value == "n":
+            elif  key == "goal_achieved" and value == "n":
                 print(f"Goal {data['goal_today']} was not achieved.")
                 goal_counter += 1
             elif key == "goal_today":
@@ -67,8 +67,12 @@ def summarize(data_file):
     print(f"Average hours worked per day: {avg_hours_worked}")
 
 # streak check function     
-def streak_check(data_file):
-    date_dict = data_file
+def streak_check(data):
+    date_dict = data
+
+    if not date_dict:
+        stats_dict["streak"] = 1
+        return
 
     date_today = datetime.today().date()
     last_date_string = list(date_dict)[-1] # get previous entry date, not yesterday's date (no guarantee of one day gap)
@@ -210,7 +214,8 @@ elif morning_or_evening == "e": # evening input
     win_today = input("What is one win from today? ")
     hours_worked = numerical_check("How many hours did you work today? ")
     mood_evening = input("How do you feel after today? ")
-    goal_achieved = yes_or_no("Was today's goal achieved? (y/n) ")
+    if "goal_today" in stats_dict:
+        goal_achieved = yes_or_no("Was today's goal achieved? (y/n) ")
     message_for_morning = input("Leave a message for tomorrow: ")
 
     #print full day summary
@@ -237,9 +242,8 @@ elif morning_or_evening == "e": # evening input
 # check whether to increment or reset streak for today
 if string_date not in date_dict:
     streak_check(date_dict)
-else:
-    stats_dict["streak"] = date_dict[string_date].get("streak", 0)
 
+print(f"Your current streak: {stats_dict["streak"]} days")
 date_dict[string_date] = stats_dict
 
 # dump dictionary object to json text file
